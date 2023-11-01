@@ -1,0 +1,23 @@
+#https://gitee.com/wslrj/PaddleMIX#/wslrj/PaddleMIX/blob/develop/ppdiffusers/ppdiffusers/pipelines/unidiffuser
+
+import paddle
+from ppdiffusers import StableDiffusionInpaintPipeline
+from ppdiffusers.utils import load_image
+
+# 可选模型权重
+# runwayml/stable-diffusion-inpainting
+# stabilityai/stable-diffusion-2-inpainting
+img_url = "https://paddlenlp.bj.bcebos.com/models/community/CompVis/stable-diffusion-v1-4/overture-creations.png"
+mask_url = "https://paddlenlp.bj.bcebos.com/models/community/CompVis/stable-diffusion-v1-4/overture-creations-mask.png"
+
+image = load_image(img_url).resize((512, 512))
+mask_image = load_image(mask_url).resize((512, 512))
+
+pipe = StableDiffusionInpaintPipeline.from_pretrained("stabilityai/stable-diffusion-2-inpainting")
+
+# 设置随机种子，我们可以复现下面的结果！
+paddle.seed(1024)
+prompt = "Face of a yellow cat, high resolution, sitting on a park bench"
+image = pipe(prompt=prompt, image=image, mask_image=mask_image).images[0]
+
+image.save("a_yellow_cat.png")
