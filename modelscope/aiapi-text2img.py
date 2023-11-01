@@ -1,4 +1,5 @@
 import requests
+import urllib.parse
 import time
 from modelscope.utils.constant import Tasks
 #from modelscope.pipelines import pipeline
@@ -60,6 +61,7 @@ while True:
             width=task["width"]
             height=task["height"]
             num_inference_steps=task["num_inference_steps"]
+            picnum=task["picnum"]
             inputText={
                 'text':prompt,
                 'width':width,
@@ -69,32 +71,39 @@ while True:
                 'guidance_scale': 7,
                 'negative_prompt':'Fuzzy'
             }
-            image = pipe(
-                prompt,
-                num_inference_steps=num_inference_steps,
-                width=width,
-                height=height,
-                guidance_scale=7.5,
-                negative_prompt='Fuzzy'
-            ).images[0]
-            
-            t = time.time()
-            imgurl="./static/text2img.png"
-            #cv2.imwrite(f, image)
-            image.save(imgurl)
-            
              
+            imgList=[]
+            for i in range(picnum):
+                image = pipe(
+                    prompt,
+                    num_inference_steps=num_inference_steps,
+                    width=width,
+                    height=height,
+                    guidance_scale=7.5,
+                    negative_prompt='Fuzzy'
+                ).images[0]
+
+                t = time.time()
+                imgurl="./static/text2img.png" 
+                 
+                image.save(imgurl)
+                with open(imgurl,'rb') as f:
+                    con=f.read()
+                    imgList.append(base64.b64encode(con).decode('utf-8'))
+                
+            
+            
             apiTime=serviceConf.apiTime();
             apiAccess=serviceConf.serviceAccess(serviceConf.serviceToken,apiTime)
             url = apiurl + '&a=finish&apiTime='+apiTime+"&apiAccess="+apiAccess
             rdata = task
-            with open(imgurl,'rb') as f:
-                    con=f.read()
-                    rdata["image64"]=base64.b64encode(con).decode('utf-8')
+            rdata["imgList"]=imgList
             
-            taskcheck.removeTask();
-            response = requests.post(url, data=rdata)
+            taskcheck.removeTask()
+            headers = {'Content-Type': 'application/json'} 
+            response = requests.post(url,headers=headers,json=rdata )
             print("生成成功")
+            print(response.text)
             time.sleep(3)
             os.system(clear_command)
             # print(res)
