@@ -1,6 +1,7 @@
 # aiApi
- aiApi是https://api.huiwanai.com推出的AI共享算力平台有关AI能力及通过AI任务赚取佣金的相关模型分享.
- 
+ aiApi是 https://api.huiwanai.com 推出的AI共享算力平台有关AI能力及通过AI任务赚取佣金的相关模型分享.
+
+ AI模型主要基于modelscope,huggingface,aistudio开源模型实现.
 # text2img
    文生图
 # text2text
