@@ -1,3 +1,4 @@
+import torch.cuda as cuda
 import time
 import requests
 from io import BytesIO
@@ -39,8 +40,9 @@ while True:
         print(res)
         if res["error"] == 1:
             taskcheck.removeTask();
-            print("还没任务")
+            print("tts还没任务")
             time.sleep(3)
+            os.system(clear_command)
 
         else:
             
@@ -48,6 +50,8 @@ while True:
             a=1;
             if task["action"]=='create_tts' or  a==1:
                 output = sambert_hifigan_tts(input=task["prompt"],voice='zhitian_emo')
+                #解除cuda占用
+                cuda.empty_cache()
                 wav = output[OutputKeys.OUTPUT_WAV]
                 audio64=base64.b64encode(wav).decode('utf-8')
                 ##发布回复

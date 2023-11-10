@@ -1,3 +1,4 @@
+import torch.cuda as cuda
 import requests
 import urllib.parse
 import time
@@ -46,7 +47,7 @@ while True:
         res = response.json()
         if res["error"] == 1:
             taskcheck.removeTask();
-            print("还没任务")
+            print("text2img还没任务")
             
             time.sleep(3)
             os.system(clear_command)
@@ -82,7 +83,8 @@ while True:
                     guidance_scale=7.5,
                     negative_prompt='Fuzzy'
                 ).images[0]
-
+                #解除cuda占用
+                cuda.empty_cache()
                 t = time.time()
                 imgurl="./static/text2img.png" 
                  
@@ -104,6 +106,7 @@ while True:
             response = requests.post(url,headers=headers,json=rdata )
             print("生成成功")
             print(response.text)
+            
             time.sleep(3)
             os.system(clear_command)
             # print(res)

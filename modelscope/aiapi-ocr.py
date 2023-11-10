@@ -122,8 +122,9 @@ while True:
         print(res)
         if res["error"] == 1:
             taskcheck.removeTask();
-            print("还没任务")
+            print("ocr还没任务")
             time.sleep(3)
+            os.system(clear_command)
 
         else:
             

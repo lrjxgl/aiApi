@@ -1,3 +1,4 @@
+import torch.cuda as cuda
 import time
 import requests
 from io import BytesIO
@@ -28,15 +29,18 @@ while True:
             time.sleep(1)
             continue;
         taskcheck.addTask()
-        url = apiurl + '&a=get'
+        apiTime=serviceConf.apiTime();
+        apiAccess=serviceConf.serviceAccess(serviceConf.serviceToken,apiTime)
+        url = apiurl + '&a=get&apiTime='+apiTime+"&apiAccess="+apiAccess
         response = requests.get(url, timeout=30)
          
         res = response.json()
         print(res)
         if res["error"] == 1:
-            print("还没任务")
+            print("ttsvideo还没任务")
             taskcheck.removeTask();
             time.sleep(3)
+            os.system(clear_command)
 
         else:
              
@@ -50,13 +54,16 @@ while True:
                 }
                 
                 mp4url = pipe(text, output_video='./static/output.mp4')[OutputKeys.OUTPUT_VIDEO]
+                cuda.empty_cache()
                 rdata = task
                 with open(mp4url,'rb') as f:
                     con=f.read()
                     rdata["base64"]=base64.b64encode(con).decode('utf-8')
                             
                 ##发布回复
-                url = apiurl+'&a=finish'
+                apiTime=serviceConf.apiTime();
+                apiAccess=serviceConf.serviceAccess(serviceConf.serviceToken,apiTime)
+                url = apiurl + '&a=finish&apiTime='+apiTime+"&apiAccess="+apiAccess
                 taskcheck.removeTask();
                 response = requests.post(url, data=rdata)
 

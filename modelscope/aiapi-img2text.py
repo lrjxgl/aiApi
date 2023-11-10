@@ -10,9 +10,9 @@ from modelscope import (
     snapshot_download, AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 )
 from auto_gptq import AutoGPTQForCausalLM
-#model_dir="/mnt/workspace/.cache/modelscope/qwen/Qwen-VL-Chat-Int4"
+model_dir="/mnt/workspace/.cache/modelscope/qwen/Qwen-VL-Chat-Int4"
 #model_dir = snapshot_download(mdir, revision='v1.0.0')
-model_dir = snapshot_download("qwen/Qwen-VL-Chat-Int4", revision='v1.0.0')
+
 import torch
 torch.manual_seed(1234)
 

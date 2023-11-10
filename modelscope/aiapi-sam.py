@@ -1,3 +1,4 @@
+import torch.cuda as cuda
 import requests
 import time
 from urllib import request
@@ -39,7 +40,7 @@ while True:
         response = requests.get(url, timeout=30)
         res = response.json()
         if res["error"] == 1:
-            print("还没任务")
+            print("sam 还没任务")
             taskcheck.removeTask();
             time.sleep(3)
             os.system(clear_command)
@@ -65,8 +66,9 @@ while True:
             else:
                 ann = prompt_process.everything_prompt()
             t = time.time()
-            f="./sam_img/%s.png" % t
+            f="./static/sam.png" 
             prompt_process.plot(annotations=ann, output_path=f)
+            cuda.empty_cache()
             #image.save(f)
             # base64
             output_buffer = BytesIO()

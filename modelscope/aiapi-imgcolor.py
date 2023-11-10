@@ -1,3 +1,5 @@
+import torch.cuda as cuda
+import torch.cuda as cuda
 import requests
 import time
 from modelscope.utils.constant import Tasks

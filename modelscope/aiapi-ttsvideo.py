@@ -1,3 +1,4 @@
+import torch.cuda as cuda
 from glob import glob
 import shutil
 import torch
@@ -13,6 +14,8 @@ from src.generate_facerender_batch import get_facerender_data
 from src.utils.init_path import init_path
 import taskcheck
 import serviceConf
+import wss
+import json
 import requests
 from modelscope.outputs import OutputKeys
 from modelscope.pipelines import pipeline
@@ -179,7 +182,7 @@ while True:
         response = requests.get(url, timeout=30)
         res = response.json()
         if res["error"] == 1:
-            print("还没任务")
+            print("ttsvideo还没任务")
             taskcheck.removeTask();
             time.sleep(3)
             os.system(clear_command)
@@ -195,11 +198,15 @@ while True:
             print("图片生成成功")
             #生成语音
             output = sambert_hifigan_tts(input=text,voice='zhitian_emo')
+            #解除cuda占用
+            cuda.empty_cache()
             wav = output[OutputKeys.OUTPUT_WAV]
             with open('output.wav', 'wb') as f:
                 f.write(wav)
             print("音频生成成功")
             mp4url=main()
+            #解除cuda占用
+            cuda.empty_cache()
             print(mp4url)
             taskcheck.removeTask();
              
@@ -213,6 +220,18 @@ while True:
                 rdata["base64"] = videocon
             
             response = requests.post(url, data=rdata)
+            if 'stream' in task and task["stream"]==1:
+                ws=wss.wsInit()
+                wsData={
+                        "type":"say",
+                        "taskAction":"ttsvideo-task",
+                        "content":"数字人生成成功",
+                        "wsclient_to":task["wsclient_to"],
+                        "taskid":task["taskid"]
+                }
+                wss.wsSend(ws,json.dumps(wsData))  
+                #wss.wsClose(ws)
+                print("ws发送成功")
             #os.system(clear_command)
             #print(rdata)
 

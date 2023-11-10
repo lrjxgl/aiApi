@@ -1,3 +1,4 @@
+import torch.cuda as cuda
 import requests
 import time
 from modelscope.utils.constant import Tasks
@@ -32,11 +33,13 @@ while True:
             time.sleep(1)
             continue;
         taskcheck.addTask()    
-        url = apiurl + '&a=get'
+        apiTime=serviceConf.apiTime();
+        apiAccess=serviceConf.serviceAccess(serviceConf.serviceToken,apiTime)
+        url = apiurl + '&a=get&apiTime='+apiTime+"&apiAccess="+apiAccess
         response = requests.get(url, timeout=5)
         res = response.json()
         if res["error"] == 1:
-            print("还没任务")
+            print("imgscale还没任务")
             taskcheck.removeTask();
             time.sleep(3)
             os.system(clear_command)
@@ -46,14 +49,18 @@ while True:
             task = res["data"]                        
             imgurl=task["imgurl"]                   
             result = pipe(imgurl)
+            #解除cuda占用
+            cuda.empty_cache()
             t = time.time()
-            f="./static/%s.png" % t
+            f="./static/imgscale.png" 
             cv2.imwrite(f, result[OutputKeys.OUTPUT_IMG])
             with open(f,'rb') as f:
                 con=f.read()
                 image64=base64.b64encode(con).decode('utf-8')
            
-            url = apiurl+'&a=finish'
+            apiTime=serviceConf.apiTime();
+            apiAccess=serviceConf.serviceAccess(serviceConf.serviceToken,apiTime)
+            url = apiurl + '&a=finish&apiTime='+apiTime+"&apiAccess="+apiAccess
             rdata = task
             rdata["base64"] = image64
             taskcheck.removeTask();

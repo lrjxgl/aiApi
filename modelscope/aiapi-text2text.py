@@ -1,3 +1,4 @@
+import torch.cuda as cuda
 import time
 import requests
 from io import BytesIO
@@ -24,9 +25,13 @@ model = AutoModelForCausalLM.from_pretrained(
     trust_remote_code=True
 ).eval()'''
 #chatglm
-from modelscope import AutoTokenizer, AutoModel
-tokenizer = AutoTokenizer.from_pretrained("ZhipuAI/chatglm2-6b-int4", trust_remote_code=True)
-model = AutoModel.from_pretrained("ZhipuAI/chatglm2-6b-int4", trust_remote_code=True).half().cuda()
+from modelscope import AutoTokenizer, AutoModel, snapshot_download
+model_dir = snapshot_download("ZhipuAI/chatglm3-6b", revision = "v1.0.0")
+#model_dir = snapshot_download("01ai/Yi-6B-200K", revision = "v1.0.0")
+#tokenizer = AutoTokenizer.from_pretrained("ZhipuAI/chatglm3-6b", trust_remote_code=True)
+#model = AutoModel.from_pretrained("ZhipuAI/chatglm3-6b", trust_remote_code=True).half().cuda()
+tokenizer = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
+model = AutoModel.from_pretrained(model_dir, trust_remote_code=True).quantize(4).cuda()
 model = model.eval()
 
 #接口
@@ -71,14 +76,20 @@ while True:
                 title=''
                 description=''
                 content=''
+                lastContent=''
                 #result = pipe(inputs)
                 if 'stream' in task and task["stream"]==1:
                     ws=wss.wsInit()
                     for content, history in model.stream_chat(tokenizer, prompt, history):
+                        start_index = content.find(lastContent)
+                        ncontent=content
+                        if start_index != -1:
+                            ncontent = content[start_index + len(lastContent):]
+                        lastContent=content
                         wsData={
                             "type":"say",
                             "taskAction":"text2text-task",
-                            "content":content,
+                            "content":ncontent,
                             "wsclient_to":task["wsclient_to"],
                             "taskid":task["taskid"]
                         }
@@ -86,6 +97,7 @@ while True:
                     ws.close()
                 else:
                     content, history = model.chat(tokenizer, prompt, task["history"])
+                print(history)
                 #history.append((prompt,content))
                 if "create_title" in task and task["create_title"]==1:
                     prompt2="给下面这篇文章取一个标题："+content                 
@@ -94,7 +106,7 @@ while True:
                     prompt="给下面这篇文章生成简介："+content
                     description,history= model.chat(tokenizer, prompt, history=history)
                 ##发布回复
-                
+                cuda.empty_cache()
                 apiTime=serviceConf.apiTime();
                 apiAccess=serviceConf.serviceAccess(serviceConf.serviceToken,apiTime)
                 url = apiurl + '&a=finish&apiTime='+apiTime+"&apiAccess="+apiAccess
